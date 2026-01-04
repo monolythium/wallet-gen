@@ -3,10 +3,11 @@ package wallet
 
 import (
 	"crypto/ecdsa"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
-	"math/rand"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/monolythium/wallet-gen/pkg/bech32"
@@ -87,20 +88,37 @@ func (w *Wallet) FormatLineEncrypted(keystorePath string) string {
 	return fmt.Sprintf("%s:%s:<keystore:%s>", w.Bech32, w.EVMAddress, keystorePath)
 }
 
-// deterministicReader wraps math/rand for deterministic io.Reader behavior.
-// This ensures consistent output across Go versions for testing.
+// deterministicReader provides deterministic random bytes using SHA256.
+// This ensures consistent output across all Go versions for testing.
 type deterministicReader struct {
-	r *rand.Rand
+	seed    [32]byte
+	counter uint64
+	buf     []byte
 }
 
 func (d *deterministicReader) Read(p []byte) (n int, err error) {
-	for i := range p {
-		p[i] = byte(d.r.Intn(256))
+	for len(p) > 0 {
+		if len(d.buf) == 0 {
+			// Generate next block: SHA256(seed || counter)
+			var input [40]byte
+			copy(input[:32], d.seed[:])
+			binary.BigEndian.PutUint64(input[32:], d.counter)
+			hash := sha256.Sum256(input[:])
+			d.buf = hash[:]
+			d.counter++
+		}
+		copied := copy(p, d.buf)
+		p = p[copied:]
+		d.buf = d.buf[copied:]
+		n += copied
 	}
-	return len(p), nil
+	return n, nil
 }
 
 // DeterministicRand creates a deterministic random source for testing.
+// Uses SHA256-based expansion which is consistent across all Go versions.
 func DeterministicRand(seed int64) io.Reader {
-	return &deterministicReader{r: rand.New(rand.NewSource(seed))}
+	var seedBytes [32]byte
+	binary.BigEndian.PutUint64(seedBytes[:8], uint64(seed))
+	return &deterministicReader{seed: seedBytes}
 }
