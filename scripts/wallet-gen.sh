@@ -109,33 +109,64 @@ confirm() {
     esac
 }
 
+# Detect if running on Windows (Git Bash/MSYS2/Cygwin)
+is_windows() {
+    case "$(uname -s)" in
+        CYGWIN*|MINGW*|MSYS*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Get the correct binary name for the platform
+get_binary_name() {
+    if is_windows; then
+        echo "walletgen.exe"
+    else
+        echo "walletgen"
+    fi
+}
+
 # Find the walletgen binary
 find_walletgen() {
-    # Check if already built in repo
-    if [[ -x "$REPO_ROOT/walletgen" ]]; then
-        WALLETGEN_BIN="$REPO_ROOT/walletgen"
+    local binary_name
+    binary_name=$(get_binary_name)
+
+    # Check if already built in repo (with correct extension)
+    if [[ -f "$REPO_ROOT/$binary_name" ]]; then
+        WALLETGEN_BIN="$REPO_ROOT/$binary_name"
         return 0
     fi
 
-    # Check if in PATH
-    if command -v walletgen &> /dev/null; then
-        WALLETGEN_BIN="walletgen"
-        return 0
+    # On Windows, also check for .exe in PATH explicitly
+    if is_windows; then
+        # Don't trust 'command -v walletgen' on Windows as it may find Linux binaries
+        # Only use repo-local or explicitly built binary
+        :
+    else
+        # Check if in PATH (Unix only - safe to use command -v)
+        if command -v walletgen &> /dev/null; then
+            WALLETGEN_BIN="walletgen"
+            return 0
+        fi
     fi
 
     # Try to build it
     echo "walletgen binary not found. Attempting to build..."
     if command -v go &> /dev/null; then
-        (cd "$REPO_ROOT" && go build -o walletgen ./cmd/walletgen)
-        if [[ -x "$REPO_ROOT/walletgen" ]]; then
-            WALLETGEN_BIN="$REPO_ROOT/walletgen"
-            print_success "Built walletgen successfully"
+        (cd "$REPO_ROOT" && go build -o "$binary_name" ./cmd/walletgen)
+        if [[ -f "$REPO_ROOT/$binary_name" ]]; then
+            WALLETGEN_BIN="$REPO_ROOT/$binary_name"
+            print_success "Built $binary_name successfully"
             return 0
         fi
     fi
 
     print_error "Could not find or build walletgen binary"
-    echo "Please run: go build -o walletgen ./cmd/walletgen"
+    if is_windows; then
+        echo "Please run: go build -o walletgen.exe ./cmd/walletgen"
+    else
+        echo "Please run: go build -o walletgen ./cmd/walletgen"
+    fi
     exit 1
 }
 
