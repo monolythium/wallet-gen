@@ -14,7 +14,45 @@ Offline mass wallet generator for Monolythium.
 
 ## Download & Run (Recommended)
 
-### Step 1: Download Pre-built Binary
+### Step 0: Check Your Architecture (Important!)
+
+**Before downloading, verify your system architecture to avoid "cannot execute binary file" errors.**
+
+Run this command in your terminal:
+
+```bash
+# macOS/Linux
+uname -m
+```
+
+Then use this table to find the correct binary:
+
+| `uname -m` Output | Architecture | Download File Pattern |
+|-------------------|--------------|----------------------|
+| `x86_64` | amd64 (Intel/AMD 64-bit) | `*_amd64.tar.gz` or `*_amd64.zip` |
+| `aarch64` or `arm64` | arm64 (Apple Silicon M1/M2/M3, ARM servers) | `*_arm64.tar.gz` |
+| `i386`, `i686` | 32-bit (unsupported) | Not available - upgrade to 64-bit OS |
+
+**Windows Users:** Most Windows systems are `x86_64` (amd64). Download the `*_windows_amd64.zip` file.
+
+**Quick Install (Auto-detects Architecture):**
+
+Instead of manually downloading, use this one-liner:
+
+```bash
+# macOS/Linux - auto-detects architecture and installs to ~/bin
+curl -fsSL https://raw.githubusercontent.com/monolythium/wallet-gen/prod/scripts/install.sh | bash
+```
+
+Or download and inspect first (recommended):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/monolythium/wallet-gen/prod/scripts/install.sh -o install.sh
+chmod +x install.sh
+./install.sh
+```
+
+### Step 1: Download Pre-built Binary (Manual Method)
 
 Download the latest release for your operating system from [GitHub Releases](https://github.com/monolythium/wallet-gen/releases):
 
@@ -92,6 +130,28 @@ C:\Users\YourName\wallet-gen-output\20240115-143022\
 ---
 
 ## Troubleshooting
+
+### "cannot execute binary file: Exec format error"
+
+This error means you downloaded the wrong architecture binary.
+
+**Fix:**
+1. Check your architecture: `uname -m`
+2. Delete the incorrect binary
+3. Download the correct one:
+   - `x86_64` → Download `*_amd64` version
+   - `aarch64` or `arm64` → Download `*_arm64` version
+4. See "Step 0: Check Your Architecture" above
+
+**Example:**
+```bash
+# Check architecture
+uname -m
+# Output: aarch64
+
+# You need the arm64 version, not amd64!
+# Download: wallet-gen_X.Y.Z_linux_arm64.tar.gz
+```
 
 ### Fixing "Permission Denied" (macOS/Linux)
 
