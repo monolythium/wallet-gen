@@ -4,12 +4,13 @@ Offline mass wallet generator for Monolythium.
 
 ## Features
 
+- **Double-click to run** - Built-in interactive wizard, no terminal experience needed
 - Generate thousands of wallets offline
-- Guided interactive script for beginners
 - Output format: `bech32:0x:privatekey`
 - Optional encrypted keystore mode (Ethereum Keystore V3)
 - Progress indicator
 - Deterministic mode for testing
+- Cross-platform: Windows, macOS, Linux
 
 ## Downloads & Running
 
@@ -62,37 +63,37 @@ chmod +x walletgen
 ./walletgen --count 10 --out wallets.txt
 ```
 
-### Windows Quick Start
+### Windows Quick Start (Double-Click)
 
-> **Note**: The guided script (`wallet-gen.sh`) is designed for macOS/Linux. On Windows, use `walletgen.exe` directly as shown below.
+**The easiest way - just double-click!**
 
-**Option A: PowerShell/CMD (Recommended)**
+1. Download `wallet-gen_X.Y.Z_windows_amd64.zip` from [GitHub Releases](https://github.com/monolythium/wallet-gen/releases)
+2. Extract the ZIP file
+3. **Double-click `walletgen.exe`**
+4. Follow the interactive wizard prompts
+
+The wizard will:
+- Ask how many wallets to generate
+- Use a safe default output folder (`%USERPROFILE%\wallet-gen-output\<timestamp>\`)
+- Let you choose between raw text or encrypted keystores
+- Show security warnings and require confirmation
+- Keep the window open when done so you can see the results
+
+**Default output location on Windows:**
+```
+C:\Users\YourName\wallet-gen-output\20240115-143022\
+  wallets.txt
+  keystores\  (if encrypted mode selected)
+```
+
+**Advanced: PowerShell/CMD (CLI mode)**
 ```powershell
-# 1. Download wallet-gen_X.Y.Z_windows_amd64.exe from GitHub Releases
-#    (or extract from the .zip for the full package)
-
-# 2. Create output directory
-mkdir C:\mono
-
-# 3. Generate wallets (plain text mode)
+# Generate with specific flags (skips wizard)
 .\walletgen.exe --count 10 --out C:\mono\wallets.txt
 
-# 4. Or with encryption (recommended)
-echo your-secure-password > C:\mono\password.txt
+# With encryption
 .\walletgen.exe --count 10 --out C:\mono\wallets.txt --encrypt --keystore-dir C:\mono\keystores --password-file C:\mono\password.txt
-del C:\mono\password.txt
 ```
-
-**Option B: WSL (if you prefer the guided script)**
-```powershell
-# Install WSL if not already installed
-wsl --install
-
-# Then run in WSL terminal:
-./scripts/wallet-gen.sh
-```
-
-> **Important**: Always use absolute paths on Windows (e.g., `C:\mono\wallets.txt`) to know exactly where files are saved.
 
 ### Fixing "Permission Denied" Errors
 
@@ -164,19 +165,35 @@ go build -o walletgen ./cmd/walletgen
 
 ## Usage
 
-### Guided Mode (macOS/Linux - Recommended for Beginners)
+### Interactive Wizard Mode (All Platforms - Recommended)
+
+Simply run the binary with no arguments:
+
+```bash
+# macOS/Linux
+./walletgen
+
+# Windows (double-click walletgen.exe or run in terminal)
+.\walletgen.exe
+```
+
+The interactive wizard will guide you through:
+1. How many wallets to generate (1-100,000)
+2. Output directory (defaults to `~/wallet-gen-output/<timestamp>/` or `%USERPROFILE%\wallet-gen-output\<timestamp>\`)
+3. Output mode:
+   - **Raw text** - Private keys in plain text (requires security confirmation)
+   - **Encrypted keystores** - Password-protected (recommended)
+   - **Both** - Raw backup + encrypted keystores
+4. Password setup (for encrypted mode)
+5. Confirmation summary before generation
+
+### Legacy Script Mode (macOS/Linux)
+
+The bash script is still available for those who prefer it:
 
 ```bash
 ./scripts/wallet-gen.sh
 ```
-
-> **Windows users**: Use `walletgen.exe` directly (see [Windows Quick Start](#windows-quick-start) above).
-
-Follow the interactive prompts to:
-- Set wallet count
-- Choose output directory
-- Select output mode (plain text or encrypted)
-- Configure encryption password
 
 ### CLI Mode (Advanced)
 
@@ -257,8 +274,8 @@ output/
 
 | Flag | Short | Description | Default |
 |------|-------|-------------|---------|
-| `--count` | `-n` | Number of wallets to generate | (required) |
-| `--out` | `-o` | Output file path | (required) |
+| `--count` | `-n` | Number of wallets to generate | (wizard mode if omitted) |
+| `--out` | `-o` | Output file path | (wizard mode if omitted) |
 | `--prefix` | | Bech32 address prefix | `mono` |
 | `--quiet` | | Disable progress output | `false` |
 | `--seed` | | Deterministic seed (testing only) | `0` (random) |
