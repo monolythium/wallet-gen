@@ -45,9 +45,19 @@ archives:
         format: zip
     files:
       - README.md
-      - LICENSE_PLACEHOLDER.md
+      - LICENSE.md
       - scripts/wallet-gen.sh
       - wallet-gen.command
+
+  # Binary-only archive (no extra files) for direct download
+  - id: binary-only
+    format: binary
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+      {{- if eq .Os "windows" }}.exe{{ end }}
 
 checksum:
   name_template: "checksums.txt"
@@ -92,24 +102,33 @@ release:
 
     Offline mass wallet generator for Monolythium blockchain.
 
-    ### Installation
+    ### Downloads
 
-    1. Download the appropriate archive for your OS below
-    2. Extract the archive
-    3. Make the binary executable (macOS/Linux): `chmod +x walletgen`
-    4. Run: `./walletgen --help`
+    **Full package** (with scripts and docs):
+    - macOS/Linux: `.tar.gz` archives
+    - Windows: `.zip` archive
+
+    **Binary only** (direct download):
+    - `wallet-gen_{{ .Version }}_windows_amd64.exe` - Windows
+    - `wallet-gen_{{ .Version }}_darwin_amd64` - macOS Intel
+    - `wallet-gen_{{ .Version }}_darwin_arm64` - macOS Apple Silicon
+    - `wallet-gen_{{ .Version }}_linux_amd64` - Linux
+
+    ### Quick Start
+
+    ```bash
+    # Windows (PowerShell)
+    .\wallet-gen_{{ .Version }}_windows_amd64.exe --help
+
+    # macOS/Linux
+    chmod +x wallet-gen_*
+    ./wallet-gen_{{ .Version }}_linux_amd64 --help
+    ```
 
     ### Verify Checksums
 
     ```bash
     sha256sum -c checksums.txt
-    ```
-
-    ### Quick Start (macOS)
-
-    For an interactive experience, double-click `wallet-gen.command` or run:
-    ```bash
-    ./scripts/wallet-gen.sh
     ```
   footer: |
     ---
