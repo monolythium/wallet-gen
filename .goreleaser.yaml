@@ -57,7 +57,6 @@ archives:
       {{- .Version }}_
       {{- .Os }}_
       {{- .Arch }}
-      {{- if eq .Os "windows" }}.exe{{ end }}
 
 checksum:
   name_template: "checksums.txt"
