@@ -32,10 +32,10 @@ func DefaultScryptParams() ScryptParams {
 
 // EncryptedKey represents an encrypted keystore file.
 type EncryptedKey struct {
-	Address  string          `json:"address"`
-	Crypto   json.RawMessage `json:"crypto"`
-	ID       string          `json:"id"`
-	Version  int             `json:"version"`
+	Address string          `json:"address"`
+	Crypto  json.RawMessage `json:"crypto"`
+	ID      string          `json:"id"`
+	Version int             `json:"version"`
 }
 
 // EncryptKey encrypts a private key to Ethereum Keystore V3 format.
