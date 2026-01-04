@@ -11,16 +11,121 @@ Offline mass wallet generator for Monolythium.
 - Progress indicator
 - Deterministic mode for testing
 
-## Quick Start
+## Downloads & Running
 
-The easiest way to get started is using the guided script:
+### Download Pre-built Binaries
+
+Download the latest release for your operating system from [GitHub Releases](https://github.com/monolythium/wallet-gen/releases):
+
+| Platform | File | Architecture |
+|----------|------|--------------|
+| macOS (Intel) | `wallet-gen_X.Y.Z_darwin_amd64.tar.gz` | x86_64 |
+| macOS (Apple Silicon) | `wallet-gen_X.Y.Z_darwin_arm64.tar.gz` | ARM64 (M1/M2/M3) |
+| Linux | `wallet-gen_X.Y.Z_linux_amd64.tar.gz` | x86_64 |
+| Linux (ARM) | `wallet-gen_X.Y.Z_linux_arm64.tar.gz` | ARM64 |
+| Windows | `wallet-gen_X.Y.Z_windows_amd64.zip` | x86_64 |
+
+### Verify Checksums
+
+Always verify the checksum of downloaded files:
+
+```bash
+# Download checksums.txt from the release
+sha256sum -c checksums.txt
+# or on macOS:
+shasum -a 256 -c checksums.txt
+```
+
+### macOS Quick Start (Double-Click)
+
+1. Download and extract the archive
+2. **Double-click `wallet-gen.command`** in Finder
+3. Terminal will open and guide you through wallet generation
+
+If you get a security warning:
+- Right-click → Open → Open (first time only)
+- Or: System Settings → Privacy & Security → Allow
+
+### Linux Quick Start
+
+```bash
+# Extract
+tar -xzf wallet-gen_*_linux_amd64.tar.gz
+
+# Make executable
+chmod +x walletgen
+
+# Run guided mode
+./scripts/wallet-gen.sh
+
+# Or run CLI directly
+./walletgen --count 10 --out wallets.txt
+```
+
+### Windows Quick Start
+
+Windows users have two options:
+
+**Option A: Use WSL (Recommended for scripts)**
+```powershell
+# Install WSL if not already installed
+wsl --install
+
+# Then run in WSL terminal:
+./scripts/wallet-gen.sh
+```
+
+**Option B: Run CLI directly in PowerShell/CMD**
+```powershell
+# Extract the zip file, then:
+.\walletgen.exe --count 10 --out C:\mono\wallets.txt --encrypt --keystore-dir C:\mono\keystores --password-file C:\mono\password.txt
+```
+
+> **Note**: Use absolute paths on Windows to avoid confusion about output location.
+
+### Fixing "Permission Denied" Errors
+
+If you get "permission denied" when running downloaded binaries:
+
+```bash
+# Make the binary executable
+chmod +x walletgen
+
+# For the launcher script
+chmod +x wallet-gen.command
+chmod +x scripts/wallet-gen.sh
+```
+
+### Adding to PATH
+
+To run `walletgen` from anywhere:
+
+**macOS/Linux (zsh):**
+```bash
+# Option 1: Copy to a directory in PATH
+sudo cp walletgen /usr/local/bin/
+
+# Option 2: Add current directory to PATH
+echo 'export PATH="$PATH:'"$(pwd)"'"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**macOS/Linux (bash):**
+```bash
+echo 'export PATH="$PATH:'"$(pwd)"'"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+## Quick Start (From Source)
+
+If you prefer to build from source:
 
 ```bash
 # Clone the repository
 git clone https://github.com/monolythium/wallet-gen.git
 cd wallet-gen
 
-# Run the guided script
+# Run the guided script (auto-builds if needed)
 ./scripts/wallet-gen.sh
 ```
 
@@ -29,8 +134,6 @@ The script will:
 2. Guide you through wallet count, output location, and mode selection
 3. Warn you about security implications
 4. Generate wallets with safe defaults
-
-> **Windows Users**: Use WSL (Windows Subsystem for Linux) or run the `walletgen` CLI directly.
 
 ## Installation
 
@@ -88,6 +191,34 @@ rm password.txt
 ## Output Location
 
 **Always use explicit output paths.** This ensures you know exactly where sensitive files are written.
+
+### Important: Working Directory Matters
+
+The output location depends on where you run the command from:
+
+```bash
+# If you run from /Users/alice/Downloads:
+./walletgen --out wallets.txt
+# Creates: /Users/alice/Downloads/wallets.txt
+
+# Use absolute paths to be explicit:
+./walletgen --out /Users/alice/secure-wallets/wallets.txt
+# Creates: /Users/alice/secure-wallets/wallets.txt
+```
+
+**Recommendation**: Always create a dedicated folder for wallet output:
+
+```bash
+# macOS/Linux
+mkdir -p ~/wallet-gen-output
+cd ~/wallet-gen-output
+walletgen --count 100 --out wallets.txt
+
+# Windows
+mkdir C:\mono
+cd C:\mono
+walletgen.exe --count 100 --out wallets.txt
+```
 
 ### Recommended Output Structure
 

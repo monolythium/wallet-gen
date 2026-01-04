@@ -1,0 +1,126 @@
+# GoReleaser configuration for wallet-gen
+# https://goreleaser.com
+
+project_name: wallet-gen
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: walletgen
+    main: ./cmd/walletgen
+    binary: walletgen
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      # Windows ARM64 is less common, skip for now
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+      - -X main.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    # Use zip for Windows
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE_PLACEHOLDER.md
+      - scripts/wallet-gen.sh
+      - wallet-gen.command
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Security
+      regexp: '^.*?sec(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: monolythium
+    name: wallet-gen
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Monolythium Wallet Generator {{ .Version }}
+
+    Offline mass wallet generator for Monolythium blockchain.
+
+    ### Installation
+
+    1. Download the appropriate archive for your OS below
+    2. Extract the archive
+    3. Make the binary executable (macOS/Linux): `chmod +x walletgen`
+    4. Run: `./walletgen --help`
+
+    ### Verify Checksums
+
+    ```bash
+    sha256sum -c checksums.txt
+    ```
+
+    ### Quick Start (macOS)
+
+    For an interactive experience, double-click `wallet-gen.command` or run:
+    ```bash
+    ./scripts/wallet-gen.sh
+    ```
+  footer: |
+    ---
+
+    **Security Note**: This tool runs completely offline. Private keys are never transmitted or printed to stdout.
+
+    **License**: Business Source License 1.1
+  name_template: "{{ .ProjectName }} v{{ .Version }}"
+
+# Disable features we don't need
+brews: []
+nfpms: []
+snapcrafts: []
+dockers: []
