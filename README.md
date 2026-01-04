@@ -12,9 +12,9 @@ Offline mass wallet generator for Monolythium.
 - Deterministic mode for testing
 - Cross-platform: Windows, macOS, Linux
 
-## Downloads & Running
+## Download & Run (Recommended)
 
-### Download Pre-built Binaries
+### Step 1: Download Pre-built Binary
 
 Download the latest release for your operating system from [GitHub Releases](https://github.com/monolythium/wallet-gen/releases):
 
@@ -26,28 +26,39 @@ Download the latest release for your operating system from [GitHub Releases](htt
 | Linux (ARM) | `wallet-gen_X.Y.Z_linux_arm64.tar.gz` | ARM64 |
 | Windows | `wallet-gen_X.Y.Z_windows_amd64.zip` | x86_64 |
 
-### Verify Checksums
+### Step 2: Verify Checksums
 
-Always verify the checksum of downloaded files:
+Always verify the checksum of downloaded files before running:
 
 ```bash
-# Download checksums.txt from the release
+# Download checksums.txt from the same release page
+# Then verify (Linux):
 sha256sum -c checksums.txt
-# or on macOS:
+
+# Or on macOS:
 shasum -a 256 -c checksums.txt
 ```
 
-### macOS Quick Start (Double-Click)
+On Windows (PowerShell):
+```powershell
+# Check a single file
+(Get-FileHash walletgen.exe -Algorithm SHA256).Hash
+# Compare with the hash in checksums.txt
+```
 
-1. Download and extract the archive
+### Step 3: Extract and Run
+
+#### macOS Quick Start
+
+1. Extract the archive (double-click the `.tar.gz` file)
 2. **Double-click `wallet-gen.command`** in Finder
 3. Terminal will open and guide you through wallet generation
 
-If you get a security warning:
+**If macOS shows "cannot be opened" or security warning:**
 - Right-click → Open → Open (first time only)
-- Or: System Settings → Privacy & Security → Allow
+- Or: System Settings → Privacy & Security → scroll down → Allow
 
-### Linux Quick Start
+#### Linux Quick Start
 
 ```bash
 # Extract
@@ -56,77 +67,92 @@ tar -xzf wallet-gen_*_linux_amd64.tar.gz
 # Make executable
 chmod +x walletgen
 
-# Run guided mode
-./scripts/wallet-gen.sh
+# Run interactive wizard
+./walletgen
 
-# Or run CLI directly
-./walletgen --count 10 --out wallets.txt
+# Or use the guided script
+./scripts/wallet-gen.sh
 ```
 
-### Windows Quick Start (Double-Click)
+#### Windows Quick Start
 
-**The easiest way - just double-click!**
+1. Extract the ZIP file
+2. **Double-click `walletgen.exe`**
+3. Follow the interactive wizard prompts
 
-1. Download `wallet-gen_X.Y.Z_windows_amd64.zip` from [GitHub Releases](https://github.com/monolythium/wallet-gen/releases)
-2. Extract the ZIP file
-3. **Double-click `walletgen.exe`**
-4. Follow the interactive wizard prompts
+The wizard will guide you through wallet count, output location, and encryption options.
 
-The wizard will:
-- Ask how many wallets to generate
-- Use a safe default output folder (`%USERPROFILE%\wallet-gen-output\<timestamp>\`)
-- Let you choose between raw text or encrypted keystores
-- Show security warnings and require confirmation
-- Keep the window open when done so you can see the results
-
-**Default output location on Windows:**
+**Default output location:**
 ```
 C:\Users\YourName\wallet-gen-output\20240115-143022\
   wallets.txt
   keystores\  (if encrypted mode selected)
 ```
 
-**Advanced: PowerShell/CMD (CLI mode)**
-```powershell
-# Generate with specific flags (skips wizard)
-.\walletgen.exe --count 10 --out C:\mono\wallets.txt
+---
 
-# With encryption
-.\walletgen.exe --count 10 --out C:\mono\wallets.txt --encrypt --keystore-dir C:\mono\keystores --password-file C:\mono\password.txt
-```
+## Troubleshooting
 
-### Fixing "Permission Denied" Errors
+### Fixing "Permission Denied" (macOS/Linux)
 
-If you get "permission denied" when running downloaded binaries:
+If you get "permission denied" when running the binary:
 
 ```bash
 # Make the binary executable
 chmod +x walletgen
 
-# For the launcher script
+# Also make scripts executable
 chmod +x wallet-gen.command
 chmod +x scripts/wallet-gen.sh
 ```
 
-### Adding to PATH
+### macOS Gatekeeper / Quarantine Issues
 
-To run `walletgen` from anywhere:
+If macOS blocks the binary with "cannot be opened because the developer cannot be verified":
 
-**macOS/Linux (zsh):**
+**Option 1: Right-click method**
+- Right-click the file → Open → Open
+
+**Option 2: Remove quarantine attribute**
 ```bash
-# Option 1: Copy to a directory in PATH
-sudo cp walletgen /usr/local/bin/
+xattr -dr com.apple.quarantine walletgen
+xattr -dr com.apple.quarantine wallet-gen.command
+```
 
-# Option 2: Add current directory to PATH
-echo 'export PATH="$PATH:'"$(pwd)"'"' >> ~/.zshrc
+> **Warning:** Only remove quarantine for files you downloaded from trusted sources (official GitHub releases). Never run `xattr -dr` on files from unknown origins.
+
+---
+
+## Adding to PATH (Optional)
+
+Adding `walletgen` to your PATH lets you run it from any directory.
+
+### macOS/Linux
+
+**Option 1: Create ~/bin and add to PATH (recommended)**
+```bash
+mkdir -p ~/bin
+cp walletgen ~/bin/
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc  # or ~/.bashrc
 source ~/.zshrc
 ```
 
-**macOS/Linux (bash):**
+**Option 2: Copy to system PATH**
 ```bash
-echo 'export PATH="$PATH:'"$(pwd)"'"' >> ~/.bashrc
-source ~/.bashrc
+sudo cp walletgen /usr/local/bin/
 ```
+
+### Windows
+
+1. Create a folder for CLI tools, e.g., `C:\mono\bin`
+2. Copy `walletgen.exe` to that folder
+3. Add the folder to your PATH:
+   - Search "Environment Variables" in Start menu
+   - Edit "Path" under User variables
+   - Add `C:\mono\bin`
+   - Click OK and restart your terminal
+
+Now you can run `walletgen` from any directory.
 
 ## Quick Start (From Source)
 
@@ -220,55 +246,50 @@ rm password.txt
 
 ## Output Location
 
-**Always use explicit output paths.** This ensures you know exactly where sensitive files are written.
+### Default Output Folders (Wizard Mode)
 
-### Important: Working Directory Matters
+When you run the interactive wizard (double-click or run without flags), it uses safe default locations:
 
-The output location depends on where you run the command from:
+| Platform | Default Output Path |
+|----------|---------------------|
+| macOS/Linux | `~/wallet-gen-output/<timestamp>/` |
+| Windows | `%USERPROFILE%\wallet-gen-output\<timestamp>\` |
+
+Example structure:
+```
+wallet-gen-output/
+  20240115-143022/           # Timestamped directory
+    wallets.txt              # Wallet addresses and keys
+    keystores/               # Encrypted keystore files (if enabled)
+      wallet-0--abc123....json
+      wallet-1--def456....json
+```
+
+### CLI Mode: Working Directory Matters
+
+When using CLI flags, output is relative to your current directory:
 
 ```bash
 # If you run from /Users/alice/Downloads:
-./walletgen --out wallets.txt
+./walletgen --count 10 --out wallets.txt
 # Creates: /Users/alice/Downloads/wallets.txt
 
 # Use absolute paths to be explicit:
-./walletgen --out /Users/alice/secure-wallets/wallets.txt
+./walletgen --count 10 --out ~/secure-wallets/wallets.txt
 # Creates: /Users/alice/secure-wallets/wallets.txt
 ```
 
-**Recommendation**: Always create a dedicated folder for wallet output:
+**Recommendation:** Use the interactive wizard or explicit absolute paths to avoid accidentally writing sensitive files to unexpected locations.
 
+### File Permissions
+
+- **Output files**: Created with `0600` (owner read/write only)
+- **Keystore directories**: Created with `0700` (owner access only)
+
+Verify permissions after generation:
 ```bash
-# macOS/Linux
-mkdir -p ~/wallet-gen-output
-cd ~/wallet-gen-output
-walletgen --count 100 --out wallets.txt
-
-# Windows
-mkdir C:\mono
-cd C:\mono
-walletgen.exe --count 100 --out wallets.txt
+ls -la ~/wallet-gen-output/
 ```
-
-### Recommended Output Structure
-
-```
-output/
-  20240115-143022/           # Timestamped directory
-    wallets.txt              # Wallet index file (0600 permissions)
-    keystores/               # Encrypted keystore files (0700 directory)
-      wallet-0--abc123....json
-      wallet-1--def456....json
-      ...
-    run-summary.txt          # Generation summary
-```
-
-### Default Behavior
-
-- **Guided script**: Creates timestamped directories under `./output/`
-- **CLI tool**: Writes to the exact path specified with `--out`
-- **File permissions**: All sensitive files are created with `0600` (owner read/write only)
-- **Directory permissions**: Keystore directories are created with `0700` (owner access only)
 
 ## Flags
 
@@ -304,51 +325,41 @@ Keystore files are written to the specified directory in Ethereum Keystore V3 fo
 
 ## Security Warnings
 
-### Private Key Safety
+### Raw Mode is Unsafe for Production
 
-- **Plain text mode stores private keys unencrypted.** Anyone with file access can steal all funds.
+- **Raw text mode stores private keys unencrypted.** Anyone with file access can steal all funds.
 - **Always prefer encrypted keystore mode** for any real-world use.
-- **Delete plain text files securely** after importing keys to a secure wallet.
-- Consider using `shred` or `srm` for secure deletion:
+- If you must use raw mode, delete the file securely after importing keys:
   ```bash
   shred -u wallets.txt  # Linux
   rm -P wallets.txt     # macOS
   ```
 
-### Password File Security
+### Password File Handling
 
 - Password files are stored in **plain text**.
-- The guided script can create a temporary password file that is deleted after generation.
-- If you create your own password file:
-  - Set restrictive permissions: `chmod 600 password.txt`
-  - Delete it immediately after use
+- The wizard can prompt for passwords interactively (no file needed).
+- If you use `--password-file`:
+  - Set restrictive permissions first: `chmod 600 password.txt`
+  - **Delete it immediately after wallet generation**
   - Never commit password files to version control
 
 ### Offline Operation
 
-This tool is designed to run **completely offline**:
+This tool runs **completely offline**:
 - No network calls are made
 - No telemetry or external connections
 - Safe to run on air-gapped machines
 
-### File Permissions
+### Summary
 
-The tool automatically sets restrictive permissions:
-- Output files: `0600` (read/write by owner only)
-- Keystore directories: `0700` (access by owner only)
-
-Verify permissions after generation:
-```bash
-ls -la output/
-```
-
-## Security
-
-- Runs completely offline with no network calls
-- Private keys are never printed to stdout
-- Output files are created with restrictive permissions (0600)
-- Uses audited crypto libraries (go-ethereum)
-- Encrypted keystores use Ethereum Keystore V3 format with scrypt KDF
+| Feature | Status |
+|---------|--------|
+| Offline operation | Yes, no network calls |
+| Private keys to stdout | Never |
+| File permissions | `0600` (owner only) |
+| Crypto library | go-ethereum (audited) |
+| Keystore format | Ethereum Keystore V3 (scrypt) |
 
 ## Testing
 
