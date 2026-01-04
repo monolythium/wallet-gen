@@ -64,9 +64,26 @@ chmod +x walletgen
 
 ### Windows Quick Start
 
-Windows users have two options:
+> **Note**: The guided script (`wallet-gen.sh`) is designed for macOS/Linux. On Windows, use `walletgen.exe` directly as shown below.
 
-**Option A: Use WSL (Recommended for scripts)**
+**Option A: PowerShell/CMD (Recommended)**
+```powershell
+# 1. Download wallet-gen_X.Y.Z_windows_amd64.exe from GitHub Releases
+#    (or extract from the .zip for the full package)
+
+# 2. Create output directory
+mkdir C:\mono
+
+# 3. Generate wallets (plain text mode)
+.\walletgen.exe --count 10 --out C:\mono\wallets.txt
+
+# 4. Or with encryption (recommended)
+echo your-secure-password > C:\mono\password.txt
+.\walletgen.exe --count 10 --out C:\mono\wallets.txt --encrypt --keystore-dir C:\mono\keystores --password-file C:\mono\password.txt
+del C:\mono\password.txt
+```
+
+**Option B: WSL (if you prefer the guided script)**
 ```powershell
 # Install WSL if not already installed
 wsl --install
@@ -75,13 +92,7 @@ wsl --install
 ./scripts/wallet-gen.sh
 ```
 
-**Option B: Run CLI directly in PowerShell/CMD**
-```powershell
-# Extract the zip file, then:
-.\walletgen.exe --count 10 --out C:\mono\wallets.txt --encrypt --keystore-dir C:\mono\keystores --password-file C:\mono\password.txt
-```
-
-> **Note**: Use absolute paths on Windows to avoid confusion about output location.
+> **Important**: Always use absolute paths on Windows (e.g., `C:\mono\wallets.txt`) to know exactly where files are saved.
 
 ### Fixing "Permission Denied" Errors
 
@@ -153,11 +164,13 @@ go build -o walletgen ./cmd/walletgen
 
 ## Usage
 
-### Guided Mode (Recommended for Beginners)
+### Guided Mode (macOS/Linux - Recommended for Beginners)
 
 ```bash
 ./scripts/wallet-gen.sh
 ```
+
+> **Windows users**: Use `walletgen.exe` directly (see [Windows Quick Start](#windows-quick-start) above).
 
 Follow the interactive prompts to:
 - Set wallet count
