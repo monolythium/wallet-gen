@@ -87,7 +87,20 @@ func (w *Wallet) FormatLineEncrypted(keystorePath string) string {
 	return fmt.Sprintf("%s:%s:<keystore:%s>", w.Bech32, w.EVMAddress, keystorePath)
 }
 
+// deterministicReader wraps math/rand for deterministic io.Reader behavior.
+// This ensures consistent output across Go versions for testing.
+type deterministicReader struct {
+	r *rand.Rand
+}
+
+func (d *deterministicReader) Read(p []byte) (n int, err error) {
+	for i := range p {
+		p[i] = byte(d.r.Intn(256))
+	}
+	return len(p), nil
+}
+
 // DeterministicRand creates a deterministic random source for testing.
 func DeterministicRand(seed int64) io.Reader {
-	return rand.New(rand.NewSource(seed))
+	return &deterministicReader{r: rand.New(rand.NewSource(seed))}
 }
