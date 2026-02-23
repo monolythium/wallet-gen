@@ -59,8 +59,8 @@ jobs:
           echo "Signing: $ZIP_FILE"
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -H "Authorization: Bearer ${{ secrets.SIGNPATH_API_TOKEN }}" \
-            -F "ProjectSlug=wallet-gen" \
-            -F "SigningPolicySlug=testing-monolabs" \
+            -F "ProjectSlug=wallet-gen-release" \
+            -F "SigningPolicySlug=wallet-gen-release" \
             -F "Artifact=@${ZIP_FILE}" \
             "https://app.signpath.io/API/v1/${{ secrets.SIGNPATH_ORGANIZATION_ID }}/SigningRequests")
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
