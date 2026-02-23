@@ -34,3 +34,86 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sign-windows:
+    name: Sign Windows
+    needs: release
+    if: needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows archive from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p unsigned
+          gh release download "${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "*windows*.zip" \
+            --dir ./unsigned
+          ls -la ./unsigned/
+
+      - name: Submit signing request
+        id: submit
+        run: |
+          ZIP_FILE=$(ls ./unsigned/*windows*.zip | head -1)
+          echo "Signing: $ZIP_FILE"
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.SIGNPATH_API_TOKEN }}" \
+            -F "ProjectSlug=wallet-gen" \
+            -F "SigningPolicySlug=testing-monolabs" \
+            -F "Artifact=@${ZIP_FILE}" \
+            "https://app.signpath.io/API/v1/${{ secrets.SIGNPATH_ORGANIZATION_ID }}/SigningRequests")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "ERROR: Signing request failed"
+            exit 1
+          fi
+          SIGNING_REQUEST_ID=$(echo "$BODY" | jq -r '.signingRequestId // .SigningRequestId // empty')
+          echo "signing-request-id=$SIGNING_REQUEST_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for signing to complete
+        id: wait
+        run: |
+          REQUEST_ID="${{ steps.submit.outputs.signing-request-id }}"
+          if [ -z "$REQUEST_ID" ]; then
+            echo "No signing request ID"
+            exit 1
+          fi
+          for i in $(seq 1 60); do
+            sleep 10
+            STATUS_RESPONSE=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.SIGNPATH_API_TOKEN }}" \
+              "https://app.signpath.io/API/v1/${{ secrets.SIGNPATH_ORGANIZATION_ID }}/SigningRequests/$REQUEST_ID")
+            STATUS=$(echo "$STATUS_RESPONSE" | jq -r '.status // .Status // "Unknown"')
+            echo "Attempt $i: Status = $STATUS"
+            if [ "$STATUS" = "Completed" ]; then
+              DOWNLOAD_URL=$(echo "$STATUS_RESPONSE" | jq -r '.signedArtifactLink // .SignedArtifactLink // empty')
+              echo "download-url=$DOWNLOAD_URL" >> "$GITHUB_OUTPUT"
+              exit 0
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Denied" ] || [ "$STATUS" = "Cancelled" ]; then
+              echo "Signing request $STATUS"
+              echo "$STATUS_RESPONSE" | jq .
+              exit 1
+            fi
+          done
+          echo "Timeout waiting for signing"
+          exit 1
+
+      - name: Download and upload signed artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ZIP_NAME=$(ls ./unsigned/*windows*.zip | head -1 | xargs basename)
+          mkdir -p signed
+          curl -s -L \
+            -H "Authorization: Bearer ${{ secrets.SIGNPATH_API_TOKEN }}" \
+            -o "./signed/$ZIP_NAME" \
+            "${{ steps.wait.outputs.download-url }}"
+          ls -la ./signed/
+          gh release upload "${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --clobber \
+            "./signed/$ZIP_NAME"
