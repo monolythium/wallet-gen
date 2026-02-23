@@ -117,3 +117,32 @@ jobs:
             --repo "${{ github.repository }}" \
             --clobber \
             "./signed/$ZIP_NAME"
+
+  publish-to-downloads:
+    name: Publish to Downloads
+    needs: [release, sign-windows]
+    if: always() && needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p assets
+          gh release download "${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --dir ./assets
+          ls -la ./assets/
+
+      - name: Create release on downloads repo
+        env:
+          GH_TOKEN: ${{ secrets.DOWNLOADS_PUBLISH_TOKEN }}
+        run: |
+          TAG="wallet-gen-${{ github.ref_name }}"
+          RELEASE_NAME="Wallet Gen ${{ github.ref_name }}"
+
+          gh release create "$TAG" \
+            --repo mono-labs-org/downloads \
+            --title "$RELEASE_NAME" \
+            --notes "Wallet Gen release ${{ github.ref_name }}. See [source release](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}) for changelog." \
+            ./assets/*
