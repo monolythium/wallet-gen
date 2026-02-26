@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/btcsuite/btcutil v1.0.2
-	github.com/ethereum/go-ethereum v1.16.8
+	github.com/ethereum/go-ethereum v1.16.9
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.8.1
 )
